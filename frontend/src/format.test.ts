@@ -1,12 +1,14 @@
 import { expect, test } from 'vitest'
 
 import {
+  formatCompactMW,
   formatGW,
   formatMW,
   formatNumber,
   formatPct,
   formatSignedGW,
   formatSignedMW,
+  formatUkDate,
   formatUkDateTime,
   formatUkTime,
 } from './format'
@@ -35,4 +37,14 @@ test('plain numbers for table cells', () => {
     '+1,226',
     '0',
   ])
+})
+
+test('chart axis labels', () => {
+  expect([formatCompactMW(0), formatCompactMW(5000), formatCompactMW(-2000), formatCompactMW(2500)]).toEqual([
+    '0',
+    '5K',
+    '-2K',
+    '2.5K',
+  ])
+  expect(formatUkDate('2026-01-02')).toBe('2 Jan')
 })

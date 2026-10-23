@@ -38,6 +38,7 @@ export function DayAheadView({ day }: { day: DayView }) {
         />
         <KpiTile
           label="Likely range"
+          wide
           value={day.band ? `${formatSignedMW(-day.band.p90)} to ${formatSignedMW(-day.band.p10)}` : 'n/a'}
           note="where the actual usually lands, from the last 7 days of errors"
         />

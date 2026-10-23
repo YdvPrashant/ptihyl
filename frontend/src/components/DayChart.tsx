@@ -1,7 +1,8 @@
 import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import type { Hour } from '../api'
-import { formatMW, formatUkTime } from '../format'
+import { niceTicks } from '../chartScale'
+import { formatCompactMW, formatMW, formatUkTime } from '../format'
 import { theme } from '../theme'
 
 type Row = {
@@ -12,8 +13,6 @@ type Row = {
   range: [number, number] | null
 }
 
-const compactMW = (v: number) => (v === 0 ? '0' : `${v / 1000}K`)
-
 export function DayChart({ hours, showAdjusted }: { hours: Hour[]; showAdjusted: boolean }) {
   const rows: Row[] = hours.map((h) => ({
     hour: formatUkTime(h.time),
@@ -22,37 +21,43 @@ export function DayChart({ hours, showAdjusted }: { hours: Hour[]; showAdjusted:
     adjusted: h.adjusted,
     range: h.low !== null && h.high !== null ? [h.low, h.high] : null,
   }))
+  const peak = Math.max(...hours.flatMap((h) => [h.forecast, h.high, h.actual, h.adjusted].filter((v) => v !== null)))
+  const ticks = niceTicks(peak, 5000)
   const line = { type: 'monotone', strokeWidth: 2, dot: false, connectNulls: false, isAnimationActive: false } as const
   const activeDot = { r: 4, strokeWidth: 2, stroke: theme.paper }
 
   return (
-    <ResponsiveContainer width="100%" height={340} initialDimension={{ width: 800, height: 340 }}>
-      <ComposedChart data={rows} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-        <CartesianGrid vertical={false} stroke={theme.rule} />
-        <XAxis dataKey="hour" interval={2} tick={{ fill: theme.muted, fontSize: 12 }} tickLine={false} stroke={theme.rule} />
-        <YAxis
-          tickFormatter={compactMW}
-          tick={{ fill: theme.muted, fontSize: 12 }}
-          axisLine={false}
-          tickLine={false}
-          width={40}
-          label={{ value: 'MW', position: 'insideTopLeft', dy: -8, fill: theme.muted, fontSize: 12 }}
-        />
-        <Tooltip content={<DayTooltip showAdjusted={showAdjusted} />} cursor={{ stroke: theme.muted, strokeWidth: 1 }} />
-        <Area
-          dataKey="range"
-          fill={theme.forecast}
-          fillOpacity={0.12}
-          stroke="none"
-          connectNulls={false}
-          isAnimationActive={false}
-          activeDot={false}
-        />
-        <Line {...line} dataKey="forecast" stroke={theme.forecast} activeDot={activeDot} />
-        <Line {...line} dataKey="actual" stroke={theme.actual} activeDot={activeDot} />
-        {showAdjusted && <Line {...line} dataKey="adjusted" stroke={theme.ink} strokeDasharray="6 4" activeDot={activeDot} />}
-      </ComposedChart>
-    </ResponsiveContainer>
+    <figure>
+      <figcaption className="mb-1 text-xs text-muted">Wind output, MW per hour</figcaption>
+      <ResponsiveContainer width="100%" height={340} initialDimension={{ width: 800, height: 340 }}>
+        <ComposedChart data={rows} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+          <CartesianGrid vertical={false} stroke={theme.rule} />
+          <XAxis dataKey="hour" interval={2} tick={{ fill: theme.muted, fontSize: 12 }} tickLine={false} stroke={theme.rule} />
+          <YAxis
+            domain={[0, ticks.at(-1) ?? 0]}
+            ticks={ticks}
+            tickFormatter={formatCompactMW}
+            tick={{ fill: theme.muted, fontSize: 12 }}
+            axisLine={false}
+            tickLine={false}
+            width={40}
+          />
+          <Tooltip content={<DayTooltip showAdjusted={showAdjusted} />} cursor={{ stroke: theme.muted, strokeWidth: 1 }} />
+          <Area
+            dataKey="range"
+            fill={theme.forecast}
+            fillOpacity={0.12}
+            stroke="none"
+            connectNulls={false}
+            isAnimationActive={false}
+            activeDot={false}
+          />
+          <Line {...line} dataKey="forecast" stroke={theme.forecast} activeDot={activeDot} />
+          <Line {...line} dataKey="actual" stroke={theme.actual} activeDot={activeDot} />
+          {showAdjusted && <Line {...line} dataKey="adjusted" stroke={theme.ink} strokeDasharray="6 4" activeDot={activeDot} />}
+        </ComposedChart>
+      </ResponsiveContainer>
+    </figure>
   )
 }
 

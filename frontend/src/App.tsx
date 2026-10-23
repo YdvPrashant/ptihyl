@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 
-import { getDay, getMeta, type Meta } from './api'
+import { getAccuracy, getDay, getMeta, type Meta } from './api'
+import { AccuracyView } from './components/AccuracyView'
 import { Controls } from './components/Controls'
 import { DayAheadView } from './components/DayAheadView'
 import { useApi } from './hooks/useApi'
@@ -68,7 +69,7 @@ function Desk({ meta }: { meta: Meta }) {
         ))}
       </div>
       <section role="tabpanel">
-        {state.tab === 'day' ? <DayPanel date={state.date} cutoff={state.cutoff} /> : <p className="text-muted">Forecast accuracy</p>}
+        {state.tab === 'day' ? <DayPanel date={state.date} cutoff={state.cutoff} /> : <AccuracyPanel cutoff={state.cutoff} />}
       </section>
     </>
   )
@@ -79,6 +80,15 @@ function DayPanel({ date, cutoff }: { date: string; cutoff: string }) {
   return (
     <Loadable error={day.error} loading={day.loading} hasData={day.data !== undefined} what="this day">
       {day.data && <DayAheadView day={day.data} />}
+    </Loadable>
+  )
+}
+
+function AccuracyPanel({ cutoff }: { cutoff: string }) {
+  const accuracy = useApi((signal) => getAccuracy(cutoff, signal), [cutoff])
+  return (
+    <Loadable error={accuracy.error} loading={accuracy.loading} hasData={accuracy.data !== undefined} what="the accuracy figures">
+      {accuracy.data && <AccuracyView data={accuracy.data} />}
     </Loadable>
   )
 }

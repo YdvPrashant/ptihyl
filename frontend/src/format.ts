@@ -45,3 +45,13 @@ export function formatSignedGW(mw: number): string {
 export function formatPct(share: number): string {
   return `${Math.round(share * 100)}%`
 }
+
+/** Axis ticks: 0, 5K, -2K, 2.5K */
+export function formatCompactMW(mw: number): string {
+  return mw === 0 ? '0' : `${mw / 1000}K`
+}
+
+/** "2026-01-02" -> "2 Jan" */
+export function formatUkDate(isoDate: string): string {
+  return dateFormat.format(new Date(isoDate))
+}
