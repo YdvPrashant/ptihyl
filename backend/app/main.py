@@ -1,8 +1,11 @@
+import os
 from datetime import date, time
 from functools import cache, lru_cache
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import FileResponse
 
 from app.config import CUTOFF_PRESETS, DATA_SOURCE, DEFAULT_CUTOFF, DELIVERY_FIRST, DELIVERY_LAST
 from app.data import Snapshot, load_snapshot
@@ -60,7 +63,25 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=422, detail=f"date must be between {DELIVERY_FIRST} and {DELIVERY_LAST}")
         return day_for(on, cutoff)
 
+    if static_dir := os.environ.get("STATIC_DIR"):
+        _serve_frontend(app, Path(static_dir).resolve())
     return app
+
+
+def _serve_frontend(app: FastAPI, root: Path) -> None:
+    """Serve the built React app from the same origin: real files as-is, any other path gets index.html.
+
+    Registered after the API routes, so those win; unknown /api paths still 404, and nothing outside `root` is served.
+    """
+
+    @app.get("/{path:path}", include_in_schema=False)
+    def frontend(path: str) -> FileResponse:
+        if path == "api" or path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="Not Found")
+        candidate = (root / path).resolve()
+        if path and candidate.is_relative_to(root) and candidate.is_file():
+            return FileResponse(candidate)
+        return FileResponse(root / "index.html")
 
 
 app = create_app()

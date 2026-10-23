@@ -29,7 +29,7 @@ export default function App() {
         ) : meta.data ? (
           <Desk meta={meta.data} />
         ) : (
-          <p className="text-muted">Loading the January data…</p>
+          <p className="text-muted">Loading the January data… The first visit can take a few seconds while the server starts.</p>
         )}
       </main>
       <footer className="border-t border-rule pt-4 text-sm text-muted">

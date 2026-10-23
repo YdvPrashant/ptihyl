@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from app.main import app
+from app.main import app, create_app
 
 client = TestClient(app)
 
@@ -52,3 +52,15 @@ def test_requests_never_call_elexon(monkeypatch):
 
     monkeypatch.setattr("urllib.request.urlopen", boom)
     assert client.get("/api/day", params={"date": "2026-01-20", "cutoff": "07:00"}).status_code == 200
+
+
+def test_serves_spa_when_static_dir_set(tmp_path, monkeypatch):
+    (tmp_path / "index.html").write_text('<div id="root"></div>')
+    (tmp_path / "favicon.svg").write_text("<svg/>")
+    monkeypatch.setenv("STATIC_DIR", str(tmp_path))
+    c = TestClient(create_app())
+    assert '<div id="root">' in c.get("/").text
+    assert '<div id="root">' in c.get("/some/deep/link").text
+    assert c.get("/favicon.svg").text == "<svg/>"
+    assert '<div id="root">' in c.get("/..%2F..%2Fpyproject.toml").text
+    assert c.get("/api/nope").status_code == 404
