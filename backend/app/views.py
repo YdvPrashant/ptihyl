@@ -6,9 +6,20 @@ from datetime import UTC, date, datetime, time, timedelta
 
 from app.config import ACTUALS_FROM, DELIVERY_FIRST, DELIVERY_LAST, LEAD_BUCKETS, TRAILING_DAYS
 from app.data import Snapshot
-from app.forecasts import ForecastIndex, pick_day_ahead
+from app.forecasts import ForecastIndex, cutoff_for, pick_day_ahead
 from app.metrics import Summary, histogram, percentile, summarize
-from app.schemas import AccuracyResponse, AdjustedOut, BinOut, DailyOut, LeadBucketOut, SummaryOut
+from app.schemas import (
+    AccuracyResponse,
+    AdjustedOut,
+    BandOut,
+    BinOut,
+    DailyOut,
+    DayResponse,
+    DayStatsOut,
+    HourOut,
+    LeadBucketOut,
+    SummaryOut,
+)
 
 
 @dataclass(frozen=True)
@@ -147,4 +158,58 @@ def accuracy_view(snap: Snapshot, index: ForecastIndex, at: time) -> AccuracyRes
         ],
         by_lead_time=_lead_time_buckets(snap, index),
         histogram=[BinOut(lo=b.lo, hi=b.hi, count=b.count) for b in histogram(errors)],
+    )
+
+
+def iso(t: datetime) -> str:
+    return t.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def day_view(snap: Snapshot, index: ForecastIndex, day: date, at: time) -> DayResponse:
+    """All 24 hours of one delivery day: the forecast the buyer could use, the likely range around it, and the outcome."""
+    history = day_ahead_errors(snap, index, at, [day - timedelta(days=k) for k in TRAILING_DAYS])
+    band = band_from(trailing_errors(history, day))
+    hours, errors, runs = [], [], set()
+    for slot in hours_of(day):
+        picked = pick_day_ahead(index, slot, at)
+        actual = snap.actuals.get(slot)
+        if picked is None:
+            hours.append(HourOut(time=iso(slot), forecast=None, actual=actual, low=None, high=None, adjusted=None,
+                                 lead_hours=None, published=None))
+            continue
+        publish, forecast = picked
+        runs.add(publish)
+        if actual is not None:
+            errors.append(forecast - actual)
+        hours.append(
+            HourOut(
+                time=iso(slot),
+                forecast=forecast,
+                actual=actual,
+                low=round(forecast - band.p90) if band else None,
+                high=round(forecast - band.p10) if band else None,
+                adjusted=round(forecast - band.bias) if band else None,
+                lead_hours=(slot - publish).total_seconds() / 3600,
+                published=iso(publish),
+            )
+        )
+    return DayResponse(
+        date=day.isoformat(),
+        cutoff=iso(cutoff_for(day, at)),
+        runs_used=sorted(iso(r) for r in runs),
+        hours=hours,
+        stats=DayStatsOut(
+            hours_with_forecast=sum(h.forecast is not None for h in hours),
+            mae=round(sum(abs(e) for e in errors) / len(errors)) if errors else None,
+            bias=round(sum(errors) / len(errors)) if errors else None,
+            worst=max(abs(e) for e in errors) if errors else None,
+        ),
+        band=BandOut(
+            p10=round(band.p10),
+            p90=round(band.p90),
+            bias=round(band.bias),
+            days_of_history=sum(1 for k in TRAILING_DAYS if history.get(day - timedelta(days=k))),
+        )
+        if band
+        else None,
     )

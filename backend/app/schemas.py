@@ -51,3 +51,37 @@ class AccuracyResponse(BaseModel):
     daily: list[DailyOut]
     by_lead_time: list[LeadBucketOut]
     histogram: list[BinOut]
+
+
+class HourOut(BaseModel):
+    time: str
+    forecast: int | None
+    actual: int | None
+    low: int | None
+    high: int | None
+    adjusted: int | None
+    lead_hours: float | None
+    published: str | None
+
+
+class DayStatsOut(BaseModel):
+    hours_with_forecast: int
+    mae: int | None
+    bias: int | None
+    worst: int | None
+
+
+class BandOut(BaseModel):
+    p10: int
+    p90: int
+    bias: int
+    days_of_history: int
+
+
+class DayResponse(BaseModel):
+    date: str
+    cutoff: str
+    runs_used: list[str]
+    hours: list[HourOut]
+    stats: DayStatsOut
+    band: BandOut | None

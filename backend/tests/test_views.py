@@ -2,7 +2,7 @@ from datetime import UTC, date, datetime, time
 
 import pytest
 
-from app.views import ErrorPoint, accuracy_view, trailing_errors
+from app.views import ErrorPoint, accuracy_view, day_view, trailing_errors
 
 
 def test_trailing_window_is_d8_to_d2():
@@ -26,3 +26,19 @@ def test_accuracy_reference_numbers(snap, index):
 @pytest.mark.parametrize("at, mae", [(time(9, 20), 2022), (time(15, 30), 1886)])
 def test_accuracy_other_cutoffs(snap, index, at, mae):
     assert accuracy_view(snap, index, at).summary.mae == mae
+
+
+def test_day_view_jan15(snap, index):
+    d = day_view(snap, index, date(2026, 1, 15), time(9, 50))
+    assert (d.cutoff, d.runs_used) == ("2026-01-14T09:50:00Z", ["2026-01-14T09:30:00Z"])
+    h0 = d.hours[0]
+    assert len(d.hours) == 24 and h0.time == "2026-01-15T00:00:00Z" and h0.lead_hours == 14.5
+    assert (h0.forecast, h0.actual, h0.low, h0.high, h0.adjusted) == (15828, 14602, 10098, 16844, 13973)
+    assert (d.stats.hours_with_forecast, d.stats.mae) == (24, 1094)
+    assert (d.band.p10, d.band.p90, d.band.bias, d.band.days_of_history) == (-1016, 5730, 1855, 7)
+
+
+def test_day_view_early_cutoff_leaves_gaps(snap, index):  # Review Focus 2
+    d = day_view(snap, index, date(2026, 1, 15), time(1, 0))
+    assert [h.time for h in d.hours if h.forecast is None] == ["2026-01-15T22:00:00Z", "2026-01-15T23:00:00Z"]
+    assert d.stats.hours_with_forecast == 22 and d.stats.mae is not None
