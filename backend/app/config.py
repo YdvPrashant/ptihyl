@@ -2,6 +2,7 @@ from datetime import date
 from pathlib import Path
 
 ELEXON_BASE = "https://data.elexon.co.uk/bmrs/api/v1"
+DATA_SOURCE = "Elexon BMRS: FUELHH (fuelType=WIND), WINDFOR"
 
 # The snapshot reaches back before the delivery window so every January day has a full 7-day error history.
 ACTUALS_FROM = date(2025, 12, 25)

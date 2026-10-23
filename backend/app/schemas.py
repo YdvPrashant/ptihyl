@@ -85,3 +85,18 @@ class DayResponse(BaseModel):
     hours: list[HourOut]
     stats: DayStatsOut
     band: BandOut | None
+
+
+class PresetOut(BaseModel):
+    id: str
+    label: str
+    time: str
+
+
+class MetaResponse(BaseModel):
+    delivery_first: str
+    delivery_last: str
+    default_cutoff: str
+    presets: list[PresetOut]
+    fetched_at: str
+    source: str

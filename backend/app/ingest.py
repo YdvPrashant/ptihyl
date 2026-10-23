@@ -9,9 +9,15 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
-from app.config import ACTUALS_FROM, ACTUALS_TO, DATA_DIR, ELEXON_BASE, FORECASTS_PUBLISHED_FROM, FORECASTS_PUBLISHED_TO
-
-SOURCE = "Elexon BMRS: FUELHH (fuelType=WIND), WINDFOR"
+from app.config import (
+    ACTUALS_FROM,
+    ACTUALS_TO,
+    DATA_DIR,
+    DATA_SOURCE,
+    ELEXON_BASE,
+    FORECASTS_PUBLISHED_FROM,
+    FORECASTS_PUBLISHED_TO,
+)
 
 
 def fetch_json(path: str) -> list[dict]:
@@ -39,7 +45,7 @@ def build_snapshot(fetch: Callable[[str], list[dict]] = fetch_json) -> dict:
             ),
             key=lambda r: (r["publishTime"], r["startTime"]),
         ),
-        "meta": {"fetched_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"), "source": SOURCE},
+        "meta": {"fetched_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"), "source": DATA_SOURCE},
     }
 
 
