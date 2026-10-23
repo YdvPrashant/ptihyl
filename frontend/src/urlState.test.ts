@@ -19,3 +19,8 @@ test('valid state round-trips through the URL', () => {
   const s: UrlState = { date: '2026-01-20', cutoff: '15:30', tab: 'accuracy' }
   expect(parseUrlState(toSearch(s), meta)).toEqual(s)
 })
+
+test('impossible calendar dates fall back too', () => {
+  // final review I3
+  expect(parseUrlState('?date=2026-01-32', meta).date).toBe('2026-01-02')
+})

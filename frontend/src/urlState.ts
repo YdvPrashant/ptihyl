@@ -6,8 +6,14 @@ export type UrlState = { date: string; cutoff: string; tab: Tab }
 const DATE = /^\d{4}-\d{2}-\d{2}$/
 const CUTOFF = /^([01]\d|2[0-3]):[0-5]\d$/
 
+/** "2026-01-32" has the right shape but is not a real day; parsing and re-printing it exposes that. */
+function isCalendarDate(date: string): boolean {
+  const d = new Date(`${date}T00:00:00Z`)
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === date
+}
+
 export function isDeliveryDay(date: string, meta: Meta): boolean {
-  return DATE.test(date) && date >= meta.delivery_first && date <= meta.delivery_last
+  return DATE.test(date) && isCalendarDate(date) && date >= meta.delivery_first && date <= meta.delivery_last
 }
 
 export function isCutoff(cutoff: string): boolean {

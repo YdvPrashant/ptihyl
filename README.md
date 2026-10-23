@@ -77,9 +77,11 @@ Elexon BMRS API ──► backend/app/ingest.py ──► backend/data/*.json (c
 - **Scope.** "Decisions made in January 2026" means delivery days 2 Jan to 1 Feb 2026, because each decision is made the day
   before delivery. The snapshot also holds late-December data, so every January decision has a full week of error history.
 - **Decision cut-offs** (UK time, on the day before delivery):
-  - 09:20, the EPEX hourly auction
-  - 09:50, the Nord Pool N2EX auction (the default)
+  - 09:20, the EPEX hourly auction (10:20 CET on [EPEX SPOT](https://www.epexspot.com/en))
+  - 09:50, the Nord Pool N2EX auction, the default
+    ([Nord Pool](https://support.nordpoolgroup.com/support/solutions/articles/8000088463-about-the-day-ahead-gb-auction))
   - 15:30, the EPEX half-hourly auction
+    ([EPEX trading brochure](https://www.epexspot.com/sites/default/files/download_center_files/Trading%20Brochure.pdf))
   - or any custom time
 - **The forecast that counts.** For each hour, it is the newest WINDFOR value published strictly before the cut-off.
   WINDFOR also republishes values for hours that have already passed; those are ignored.
@@ -140,4 +142,7 @@ This project was built with the help of **Claude Code**, Anthropic's AI coding a
 - writing code and tests
 - reviewing
 
-Every number the app shows is checked by automated tests and reproduced independently by `research/explore.py`.
+Every number the app shows is pinned by automated tests. `research/explore.py` independently reproduces the headline accuracy
+figures. Two differences are expected:
+- Its bias-adjusted miss is 1,657 MW rather than 1,648 MW, because its error history starts on 30 Dec instead of 25 Dec.
+- It does not compute band coverage.

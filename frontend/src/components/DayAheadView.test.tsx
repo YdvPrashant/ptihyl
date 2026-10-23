@@ -13,6 +13,7 @@ test('explains which forecast run was used', () => {
   render(<DayAheadView day={jan15} />)
   expect(screen.getByText(/published 14 Jan, 09:30, 20 min before the 09:50 cut-off/)).toBeInTheDocument()
   expect(screen.getByText('1,094 MW')).toBeInTheDocument()
+  expect(screen.getByText('Likely range vs forecast')).toBeInTheDocument() // final review I2 wording
 })
 
 test('warns about hours with no forecast', () => {

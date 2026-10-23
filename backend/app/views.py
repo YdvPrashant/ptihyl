@@ -109,7 +109,7 @@ def _adjusted_and_coverage(by_day: dict[date, list[ErrorPoint]]) -> tuple[float,
         if band is None:
             continue
         for p in by_day[day]:
-            adjusted_abs.append(abs(p.forecast - band.bias - p.actual))
+            adjusted_abs.append(abs(max(0.0, p.forecast - band.bias) - p.actual))
             inside += p.forecast - band.p90 <= p.actual <= p.forecast - band.p10
     return sum(adjusted_abs) / len(adjusted_abs), inside / len(adjusted_abs)
 
@@ -186,9 +186,10 @@ def day_view(snap: Snapshot, index: ForecastIndex, day: date, at: time) -> DayRe
                 time=iso(slot),
                 forecast=forecast,
                 actual=actual,
-                low=round(forecast - band.p90) if band else None,
-                high=round(forecast - band.p10) if band else None,
-                adjusted=round(forecast - band.bias) if band else None,
+                # Wind output cannot be negative, so the range and the adjusted forecast stop at 0.
+                low=max(0, round(forecast - band.p90)) if band else None,
+                high=max(0, round(forecast - band.p10)) if band else None,
+                adjusted=max(0, round(forecast - band.bias)) if band else None,
                 lead_hours=(slot - publish).total_seconds() / 3600,
                 published=iso(publish),
             )

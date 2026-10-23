@@ -37,10 +37,10 @@ export function DayAheadView({ day }: { day: DayView }) {
           note="largest single-hour miss"
         />
         <KpiTile
-          label="Likely range"
+          label="Likely range vs forecast"
           wide
           value={day.band ? `${formatSignedMW(-day.band.p90)} to ${formatSignedMW(-day.band.p10)}` : 'n/a'}
-          note="where the actual usually lands, from the last 7 days of errors"
+          note="how far the actual usually lands from the forecast, based on the last 7 days of errors"
         />
       </div>
 
