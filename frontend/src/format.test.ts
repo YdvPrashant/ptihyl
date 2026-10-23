@@ -1,6 +1,15 @@
 import { expect, test } from 'vitest'
 
-import { formatGW, formatMW, formatPct, formatSignedGW, formatSignedMW, formatUkDateTime, formatUkTime } from './format'
+import {
+  formatGW,
+  formatMW,
+  formatNumber,
+  formatPct,
+  formatSignedGW,
+  formatSignedMW,
+  formatUkDateTime,
+  formatUkTime,
+} from './format'
 
 test('times stay in UK time when the browser is in India', () => {
   // Review Focus 1
@@ -16,5 +25,14 @@ test('numbers', () => {
     '+1.7 GW',
     '84%',
     '72%',
+  ])
+})
+
+test('plain numbers for table cells', () => {
+  expect([formatNumber(1094), formatNumber(-506), formatNumber(1226, true), formatNumber(0, true)]).toEqual([
+    '1,094',
+    '-506',
+    '+1,226',
+    '0',
   ])
 })

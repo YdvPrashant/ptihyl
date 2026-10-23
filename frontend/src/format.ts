@@ -16,14 +16,19 @@ export function formatUkDateTime(iso: string): string {
   return `${dateFormat.format(new Date(iso))}, ${formatUkTime(iso)}`
 }
 
+/** "1,094", or "+1,226" when `signed` (table cells, where the unit sits in the column header) */
+export function formatNumber(n: number, signed = false): string {
+  return `${signed ? sign(n) : n < 0 ? '-' : ''}${wholeNumber.format(Math.abs(n))}`
+}
+
 /** "1,728 MW" */
 export function formatMW(mw: number): string {
-  return `${mw < 0 ? '-' : ''}${wholeNumber.format(Math.abs(mw))} MW`
+  return `${formatNumber(mw)} MW`
 }
 
 /** "+1,728 MW" / "-506 MW" */
 export function formatSignedMW(mw: number): string {
-  return `${sign(mw)}${wholeNumber.format(Math.abs(mw))} MW`
+  return `${formatNumber(mw, true)} MW`
 }
 
 /** "2.0 GW" */

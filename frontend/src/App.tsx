@@ -1,7 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react'
 
-import { getMeta, type Meta } from './api'
+import { getDay, getMeta, type Meta } from './api'
 import { Controls } from './components/Controls'
+import { DayAheadView } from './components/DayAheadView'
 import { useApi } from './hooks/useApi'
 import { isCutoff, isDeliveryDay, parseUrlState, toSearch, type Tab, type UrlState } from './urlState'
 
@@ -66,15 +67,31 @@ function Desk({ meta }: { meta: Meta }) {
           </button>
         ))}
       </div>
-      <TabPanel>{state.tab === 'day' ? 'Day-ahead view' : 'Forecast accuracy'}</TabPanel>
+      <section role="tabpanel">
+        {state.tab === 'day' ? <DayPanel date={state.date} cutoff={state.cutoff} /> : <p className="text-muted">Forecast accuracy</p>}
+      </section>
     </>
   )
 }
 
-function TabPanel({ children }: { children: ReactNode }) {
+function DayPanel({ date, cutoff }: { date: string; cutoff: string }) {
+  const day = useApi((signal) => getDay(date, cutoff, signal), [date, cutoff])
   return (
-    <section role="tabpanel" className="text-muted">
-      {children}
-    </section>
+    <Loadable error={day.error} loading={day.loading} hasData={day.data !== undefined} what="this day">
+      {day.data && <DayAheadView day={day.data} />}
+    </Loadable>
   )
+}
+
+/** Shows the latest data dimmed while a refetch runs (no skeleton flash), and a plain error when a request fails. */
+function Loadable(props: { error?: Error; loading: boolean; hasData: boolean; what: string; children: ReactNode }) {
+  if (props.error) {
+    return (
+      <p role="alert" className="border-l-2 border-actual pl-3">
+        Could not load {props.what} ({props.error.message}). Try another date or cut-off, or reload the page.
+      </p>
+    )
+  }
+  if (!props.hasData) return <p className="text-muted">Loading {props.what}…</p>
+  return <div className={props.loading ? 'opacity-60 transition-opacity' : 'transition-opacity'}>{props.children}</div>
 }

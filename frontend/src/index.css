@@ -7,17 +7,16 @@
   --color-muted: #5a6f7c;
   --color-rule: #c5d0d3;
   --color-forecast: #1d5fa8;
-  --color-actual: #d9831f;
+  --color-actual: #c2700f;
 }
 
 body {
   @apply bg-paper font-sans text-ink antialiased;
 }
 
-/* Big numbers read like instrument dials: condensed, heavy, fixed-width digits. */
+/* Big numbers read like instrument dials: condensed and heavy, with proportional digits (tabular only in tables). */
 .readout {
   font-stretch: 72%;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
 }
