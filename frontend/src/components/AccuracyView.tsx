@@ -1,17 +1,22 @@
+import type { ReactNode } from 'react'
+
 import type { Accuracy } from '../api'
 import { formatGW, formatMW, formatNumber, formatPct, formatSignedGW, formatSignedMW, formatUkDate } from '../format'
 import { DailyChart, ErrorHistogram, LeadTimeChart } from './AccuracyCharts'
 import { KpiTile } from './KpiTile'
 import { MethodNote } from './MethodNote'
 
-export function AccuracyView({ data }: { data: Accuracy }) {
+export function AccuracyView({ data, onPickDay }: { data: Accuracy; onPickDay: (date: string) => void }) {
   const s = data.summary
+  const windowHours = ((Date.parse(data.window_last) - Date.parse(data.window_first)) / 864e5 + 1) * 24
 
   return (
     <div className="flex flex-col gap-8">
       <p className="text-lg">
         Day-ahead forecasts for delivery from {formatUkDate(data.window_first)} to {formatUkDate(data.window_last)} 2026,
         using the newest run published before the {data.cutoff} cut-off.
+        {s.hours < windowHours &&
+          ` Based on ${formatNumber(s.hours)} of ${formatNumber(windowHours)} hours; the rest had no forecast published before the cut-off.`}
       </p>
 
       <div className="flex flex-wrap gap-y-6">
@@ -44,7 +49,7 @@ export function AccuracyView({ data }: { data: Accuracy }) {
         <LeadTimeChart data={data.by_lead_time} />
         <ErrorHistogram data={data.histogram} p10={s.p10} p90={s.p90} />
       </div>
-      <DailyChart data={data.daily} />
+      <DailyChart data={data.daily} onPickDay={onPickDay} />
 
       <details className="text-sm">
         <summary className="cursor-pointer text-muted">Show the numbers behind the charts</summary>
@@ -52,17 +57,34 @@ export function AccuracyView({ data }: { data: Accuracy }) {
           <SmallTable
             caption="By lead time"
             head={['Ahead', 'Typical miss (MW)', 'Forecasts']}
-            rows={data.by_lead_time.map((b) => [b.label, formatNumber(b.mae), formatNumber(b.n)])}
+            rows={data.by_lead_time.map((b) => ({ key: b.label, cells: [b.label, formatNumber(b.mae), formatNumber(b.n)] }))}
           />
           <SmallTable
             caption="By error size"
             head={['Error (MW)', 'Hours']}
-            rows={data.histogram.map((b) => [`${formatNumber(b.lo, true)} to ${formatNumber(b.hi, true)}`, String(b.count)])}
+            rows={data.histogram.map((b) => ({
+              key: String(b.lo),
+              cells: [`${formatNumber(b.lo, true)} to ${formatNumber(b.hi, true)}`, String(b.count)],
+            }))}
           />
           <SmallTable
             caption="By delivery day"
             head={['Day', 'Typical miss (MW)', 'Bias (MW)']}
-            rows={data.daily.map((d) => [formatUkDate(d.date), formatNumber(d.mae), formatNumber(d.bias, true)])}
+            rows={data.daily.map((d) => ({
+              key: d.date,
+              cells: [
+                <button
+                  key="day"
+                  aria-label={`Open ${formatUkDate(d.date)}`}
+                  onClick={() => onPickDay(d.date)}
+                  className="underline decoration-rule underline-offset-2 hover:decoration-ink focus-visible:outline-2 focus-visible:outline-forecast"
+                >
+                  {formatUkDate(d.date)}
+                </button>,
+                formatNumber(d.mae),
+                formatNumber(d.bias, true),
+              ],
+            }))}
           />
         </div>
       </details>
@@ -72,7 +94,7 @@ export function AccuracyView({ data }: { data: Accuracy }) {
   )
 }
 
-function SmallTable({ caption, head, rows }: { caption: string; head: string[]; rows: string[][] }) {
+function SmallTable({ caption, head, rows }: { caption: string; head: string[]; rows: { key: string; cells: ReactNode[] }[] }) {
   return (
     <table className="w-full text-left">
       <caption className="mb-1 text-left font-semibold">{caption}</caption>
@@ -87,8 +109,8 @@ function SmallTable({ caption, head, rows }: { caption: string; head: string[]; 
       </thead>
       <tbody>
         {rows.map((r) => (
-          <tr key={r[0]} className="border-t border-rule">
-            {r.map((cell, i) => (
+          <tr key={r.key} className="border-t border-rule">
+            {r.cells.map((cell, i) => (
               <td key={i} className="py-1">
                 {cell}
               </td>

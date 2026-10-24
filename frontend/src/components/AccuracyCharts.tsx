@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, CartesianGrid, Cell, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import type { Accuracy } from '../api'
 import { niceTicks } from '../chartScale'
@@ -73,16 +73,26 @@ export function ErrorHistogram({ data, p10, p90 }: { data: Accuracy['histogram']
             <Cell key={b.lo} fill={b.hi > p10 && b.lo <= p90 ? theme.forecast : theme.rule} />
           ))}
         </Bar>
+        {/* Bins are categories, so the line for an error of 0 sits at the left edge of the bin that starts at 0. */}
+        <ReferenceLine x={0} position="start" stroke={theme.ink} />
       </BarChart>
     </ChartFrame>
   )
 }
 
-export function DailyChart({ data }: { data: Accuracy['daily'] }) {
+export function DailyChart({ data, onPickDay }: { data: Accuracy['daily']; onPickDay: (date: string) => void }) {
   const dayTicks = niceTicks(Math.max(...data.map((d) => d.mae)), 1000)
   return (
-    <ChartFrame title="Typical miss on each delivery day" caption="Average size of the hourly error, per day.">
-      <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+    <ChartFrame title="Typical miss on each delivery day" caption="Average size of the hourly error, per day. Click a day to open it.">
+      <BarChart
+        data={data}
+        margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
+        className="cursor-pointer"
+        onClick={(state) => {
+          const date = data[Number(state.activeTooltipIndex)]?.date
+          if (date) onPickDay(date)
+        }}
+      >
         <CartesianGrid vertical={false} stroke={theme.rule} />
         <XAxis dataKey="date" tickFormatter={formatUkDate} {...axis} stroke={theme.rule} interval={4} />
         <YAxis ticks={dayTicks} domain={[0, dayTicks.at(-1) ?? 0]} tickFormatter={formatCompactMW} {...axis} axisLine={false} width={40} />

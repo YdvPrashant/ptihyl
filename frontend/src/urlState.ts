@@ -16,6 +16,13 @@ export function isDeliveryDay(date: string, meta: Meta): boolean {
   return DATE.test(date) && isCalendarDate(date) && date >= meta.delivery_first && date <= meta.delivery_last
 }
 
+/** "2026-01-31", 1 -> "2026-02-01" */
+export function shiftDay(date: string, days: number): string {
+  const d = new Date(`${date}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + days)
+  return d.toISOString().slice(0, 10)
+}
+
 export function isCutoff(cutoff: string): boolean {
   return CUTOFF.test(cutoff)
 }

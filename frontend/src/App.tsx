@@ -69,7 +69,11 @@ function Desk({ meta }: { meta: Meta }) {
         ))}
       </div>
       <section role="tabpanel">
-        {state.tab === 'day' ? <DayPanel date={state.date} cutoff={state.cutoff} /> : <AccuracyPanel cutoff={state.cutoff} />}
+        {state.tab === 'day' ? (
+          <DayPanel date={state.date} cutoff={state.cutoff} />
+        ) : (
+          <AccuracyPanel cutoff={state.cutoff} onPickDay={(date) => isDeliveryDay(date, meta) && update({ tab: 'day', date })} />
+        )}
       </section>
     </>
   )
@@ -84,11 +88,11 @@ function DayPanel({ date, cutoff }: { date: string; cutoff: string }) {
   )
 }
 
-function AccuracyPanel({ cutoff }: { cutoff: string }) {
+function AccuracyPanel({ cutoff, onPickDay }: { cutoff: string; onPickDay: (date: string) => void }) {
   const accuracy = useApi((signal) => getAccuracy(cutoff, signal), [cutoff])
   return (
     <Loadable error={accuracy.error} loading={accuracy.loading} hasData={accuracy.data !== undefined} what="the accuracy figures">
-      {accuracy.data && <AccuracyView data={accuracy.data} />}
+      {accuracy.data && <AccuracyView data={accuracy.data} onPickDay={onPickDay} />}
     </Loadable>
   )
 }

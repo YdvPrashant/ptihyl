@@ -2,6 +2,7 @@
 // instead of trusting the viewer's browser (a reviewer in another country would otherwise see shifted hours).
 const timeFormat = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'UTC' })
 const dateFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })
+const longDateFormat = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })
 const wholeNumber = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 0 })
 
 const sign = (n: number) => (n > 0 ? '+' : n < 0 ? '-' : '')
@@ -54,4 +55,9 @@ export function formatCompactMW(mw: number): string {
 /** "2026-01-02" -> "2 Jan" */
 export function formatUkDate(isoDate: string): string {
   return dateFormat.format(new Date(isoDate))
+}
+
+/** "2026-01-15" -> "Thursday 15 January" */
+export function formatUkLongDate(isoDate: string): string {
+  return longDateFormat.format(new Date(isoDate))
 }

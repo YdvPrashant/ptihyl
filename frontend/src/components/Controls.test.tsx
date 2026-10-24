@@ -23,3 +23,11 @@ test('choosing a preset reports the new cut-off', async () => {
   await userEvent.selectOptions(screen.getByLabelText(/decision cut-off/i), '15:30')
   expect(onCutoffChange).toHaveBeenCalledWith('15:30')
 })
+
+test('previous and next buttons step one day and stop at the window edges', async () => {
+  const onDateChange = vi.fn()
+  render(<Controls meta={meta} date="2026-01-02" cutoff="09:50" onDateChange={onDateChange} onCutoffChange={noop} />)
+  expect(screen.getByRole('button', { name: 'Previous day' })).toBeDisabled()
+  await userEvent.click(screen.getByRole('button', { name: 'Next day' }))
+  expect(onDateChange).toHaveBeenCalledWith('2026-01-03')
+})

@@ -15,6 +15,7 @@ day before delivery, so they plan around whatever wind forecast exists at that m
   - how wrong those forecasts were
   - how accuracy changes with how far ahead they were made
   - how much a simple correction would have helped
+  - how far off each delivery day was (click a day to open it in the day-ahead view)
 
 ![Day-ahead view](docs/screenshots/day-ahead.png)
 ![Forecast accuracy](docs/screenshots/accuracy.png)
@@ -124,8 +125,8 @@ Elexon BMRS API ──► backend/app/ingest.py ──► backend/data/*.json (c
 
 ## Tests and CI
 
-- **Backend:** `cd backend && uv run pytest -q` runs 32 tests, then `uv run ruff check .` lints.
-- **Frontend:** `cd frontend && npm test -- --run` runs 13 tests. They always run in the Asia/Kolkata timezone, so any
+- **Backend:** `cd backend && uv run pytest -q` runs 33 tests, then `uv run ruff check .` lints.
+- **Frontend:** `cd frontend && npm test -- --run` runs 20 tests. They always run in the Asia/Kolkata timezone, so any
   local-time bug fails loudly. Then `npm run lint` and `npm run build`.
 - **GitHub Actions** runs all of the above and builds the Docker image on every push.
 

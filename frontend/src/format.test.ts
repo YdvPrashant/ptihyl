@@ -10,6 +10,7 @@ import {
   formatSignedMW,
   formatUkDate,
   formatUkDateTime,
+  formatUkLongDate,
   formatUkTime,
 } from './format'
 
@@ -47,4 +48,9 @@ test('chart axis labels', () => {
     '2.5K',
   ])
   expect(formatUkDate('2026-01-02')).toBe('2 Jan')
+})
+
+test('long delivery-day names stay on the UK date', () => {
+  expect(formatUkLongDate('2026-01-15')).toBe('Thursday 15 January')
+  expect(formatUkLongDate('2026-02-01')).toBe('Sunday 1 February')
 })

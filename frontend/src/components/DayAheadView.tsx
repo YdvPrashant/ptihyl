@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 import type { DayView } from '../api'
-import { formatMW, formatNumber, formatSignedMW, formatUkDateTime, formatUkTime } from '../format'
+import { formatMW, formatNumber, formatSignedMW, formatUkDate, formatUkLongDate, formatUkTime } from '../format'
 import { theme } from '../theme'
 import { DayChart } from './DayChart'
 import { KpiTile } from './KpiTile'
@@ -11,13 +11,14 @@ export function DayAheadView({ day }: { day: DayView }) {
   const cutoff = formatUkTime(day.cutoff)
   const latestRun = day.runs_used.at(-1)
   const missing = 24 - day.stats.hours_with_forecast
+  const delivery = formatUkLongDate(day.date)
 
   return (
     <div className="flex flex-col gap-6">
       <p className="text-lg">
         {latestRun
-          ? `Forecast used: published ${formatUkDateTime(latestRun)}, ${minutesBetween(latestRun, day.cutoff)} min before the ${cutoff} cut-off.`
-          : `No forecast was published before the ${cutoff} cut-off.`}
+          ? `Forecast for ${delivery}, published ${formatUkDate(latestRun)} at ${formatUkTime(latestRun)}, ${minutesBetween(latestRun, day.cutoff)} min before the ${cutoff} cut-off.`
+          : `No forecast for ${delivery} was published before the ${cutoff} cut-off.`}
       </p>
 
       <div className="flex flex-wrap gap-y-6">
@@ -29,7 +30,7 @@ export function DayAheadView({ day }: { day: DayView }) {
         <KpiTile
           label="Bias"
           value={day.stats.bias === null ? 'n/a' : formatSignedMW(day.stats.bias)}
-          note="positive means the forecast was too high"
+          note={leanNote(day)}
         />
         <KpiTile
           label="Worst hour"
@@ -110,6 +111,15 @@ function LegendItem({ swatch, label }: { swatch: React.ReactNode; label: string 
       {label}
     </li>
   )
+}
+
+/** "too high in 24 of 24 hours": how many hours landed on the side the day's bias leans to. */
+function leanNote(day: DayView): string | undefined {
+  const errors = day.hours.flatMap((h) => (h.forecast === null || h.actual === null ? [] : [h.forecast - h.actual]))
+  if (day.stats.bias === null || errors.length === 0) return undefined
+  const high = day.stats.bias >= 0
+  const count = errors.filter((e) => (high ? e > 0 : e < 0)).length
+  return `too ${high ? 'high' : 'low'} in ${count} of ${errors.length} hours`
 }
 
 function minutesBetween(fromIso: string, toIso: string): number {
