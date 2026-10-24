@@ -32,6 +32,6 @@ def test_snapshot_loads_expected_counts(snap):
     assert len(snap.actuals) == 1872 and len(snap.forecasts) == 23944
 
 
-def test_late_run_is_picked_by_publish_time(index):  # Review Focus 5
+def test_late_run_is_picked_by_publish_time(index):  # on 15 Jan the 11:30 run came out at 12:25
     pub, _ = pick_day_ahead(index, datetime(2026, 1, 16, 12, tzinfo=UTC), time(15, 30))
     assert pub == datetime(2026, 1, 15, 12, 25, tzinfo=UTC)

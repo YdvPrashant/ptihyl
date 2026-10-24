@@ -4,13 +4,9 @@ import { getAccuracy, getDay, getMeta, type Meta } from './api'
 import { AccuracyView } from './components/AccuracyView'
 import { Controls } from './components/Controls'
 import { DayAheadView } from './components/DayAheadView'
+import { ViewTabs } from './components/ViewTabs'
 import { useApi } from './hooks/useApi'
-import { isCutoff, isDeliveryDay, parseUrlState, toSearch, type Tab, type UrlState } from './urlState'
-
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'day', label: 'Day-ahead view' },
-  { id: 'accuracy', label: 'Forecast accuracy' },
-]
+import { isCutoff, isDeliveryDay, parseUrlState, toSearch, type UrlState } from './urlState'
 
 export default function App() {
   const meta = useApi((signal) => getMeta(signal), [])
@@ -53,28 +49,17 @@ function Desk({ meta }: { meta: Meta }) {
         onDateChange={(date) => isDeliveryDay(date, meta) && update({ date })}
         onCutoffChange={(cutoff) => isCutoff(cutoff) && update({ cutoff })}
       />
-      <div role="tablist" aria-label="View" className="flex gap-1 border-b border-rule">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            role="tab"
-            aria-selected={state.tab === t.id}
-            onClick={() => update({ tab: t.id })}
-            className={`-mb-px border-b-2 px-4 py-2 font-medium focus-visible:outline-2 focus-visible:outline-forecast ${
-              state.tab === t.id ? 'border-ink text-ink' : 'border-transparent text-muted hover:text-ink'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-      <section role="tabpanel">
+      <ViewTabs selected={state.tab} onSelect={(tab) => update({ tab })}>
         {state.tab === 'day' ? (
           <DayPanel date={state.date} cutoff={state.cutoff} />
         ) : (
-          <AccuracyPanel cutoff={state.cutoff} onPickDay={(date) => isDeliveryDay(date, meta) && update({ tab: 'day', date })} />
+          <AccuracyPanel
+            date={state.date}
+            cutoff={state.cutoff}
+            onPickDay={(date) => isDeliveryDay(date, meta) && update({ tab: 'day', date })}
+          />
         )}
-      </section>
+      </ViewTabs>
     </>
   )
 }
@@ -88,11 +73,11 @@ function DayPanel({ date, cutoff }: { date: string; cutoff: string }) {
   )
 }
 
-function AccuracyPanel({ cutoff, onPickDay }: { cutoff: string; onPickDay: (date: string) => void }) {
+function AccuracyPanel({ date, cutoff, onPickDay }: { date: string; cutoff: string; onPickDay: (date: string) => void }) {
   const accuracy = useApi((signal) => getAccuracy(cutoff, signal), [cutoff])
   return (
     <Loadable error={accuracy.error} loading={accuracy.loading} hasData={accuracy.data !== undefined} what="the accuracy figures">
-      {accuracy.data && <AccuracyView data={accuracy.data} onPickDay={onPickDay} />}
+      {accuracy.data && <AccuracyView data={accuracy.data} selected={date} onPickDay={onPickDay} />}
     </Loadable>
   )
 }

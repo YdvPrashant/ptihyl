@@ -7,7 +7,6 @@ import { parseUrlState, shiftDay, toSearch, type UrlState } from './urlState'
 const meta = metaJson as Meta
 
 test('bad or out-of-window values fall back to defaults', () => {
-  // Review Focus 3
   expect(parseUrlState('?date=2026-03-01&cutoff=25:00&tab=x', meta)).toEqual({
     date: '2026-01-02',
     cutoff: '09:50',
@@ -21,8 +20,13 @@ test('valid state round-trips through the URL', () => {
 })
 
 test('impossible calendar dates fall back too', () => {
-  // final review I3
   expect(parseUrlState('?date=2026-01-32', meta).date).toBe('2026-01-02')
+})
+
+test('shared links keep the cut-off readable', () => {
+  expect(toSearch({ date: '2026-01-20', cutoff: '15:30', tab: 'accuracy' })).toBe(
+    '?date=2026-01-20&cutoff=15:30&tab=accuracy',
+  )
 })
 
 test('stepping a day crosses month ends', () => {

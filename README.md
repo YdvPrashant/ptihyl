@@ -15,7 +15,7 @@ day before delivery, so they plan around whatever wind forecast exists at that m
   - how wrong those forecasts were
   - how accuracy changes with how far ahead they were made
   - how much a simple correction would have helped
-  - how far off each delivery day was (click a day to open it in the day-ahead view)
+  - how far off each delivery day was, with the chosen day marked (click a day to open it in the day-ahead view)
 
 ![Day-ahead view](docs/screenshots/day-ahead.png)
 ![Forecast accuracy](docs/screenshots/accuracy.png)
@@ -71,6 +71,10 @@ Elexon BMRS API ──► backend/app/ingest.py ──► backend/data/*.json (c
 - **Frontend (React, TypeScript, Vite, Tailwind, Recharts).** It keeps the chosen day, cut-off and tab in the URL, so any
   view can be shared as a link.
 - **One Docker image.** A Node stage builds the frontend; a Python stage serves both the API and the built files.
+- **Caching.** Every file under `/assets` has a content hash in its name, so browsers keep it for a year. Browsers
+  re-check the page and the API answers on every visit, but Vercel's CDN may keep them for the life of a deployment:
+  its cache is keyed by deployment, and the data never changes within one. Repeat visits then usually skip the
+  container's cold start.
 
 ## Method and assumptions
 
@@ -125,9 +129,10 @@ Elexon BMRS API ──► backend/app/ingest.py ──► backend/data/*.json (c
 
 ## Tests and CI
 
-- **Backend:** `cd backend && uv run pytest -q` runs 33 tests, then `uv run ruff check .` lints.
-- **Frontend:** `cd frontend && npm test -- --run` runs 20 tests. They always run in the Asia/Kolkata timezone, so any
-  local-time bug fails loudly. Then `npm run lint` and `npm run build`.
+- **Backend:** `cd backend && uv run pytest -q` runs 43 tests, `uv run ruff check .` lints, and
+  `uv run ruff format --check .` checks the formatting.
+- **Frontend:** `cd frontend && npm test -- --run` runs 28 tests. They always run in the Asia/Kolkata timezone, so any
+  local-time bug fails loudly. Then `npm run lint`, and `npm run build`, which type-checks the app and its tests.
 - **GitHub Actions** runs all of the above and builds the Docker image on every push.
 
 ## Deployment

@@ -15,11 +15,15 @@ test('explains which forecast run was used', () => {
     screen.getByText(/Forecast for Thursday 15 January, published 14 Jan at 09:30, 20 min before the 09:50 cut-off/),
   ).toBeInTheDocument()
   expect(screen.getByText('1,094 MW')).toBeInTheDocument()
-  expect(screen.getByText('Likely range vs forecast')).toBeInTheDocument() // final review I2 wording
+  expect(screen.getByText('Likely range vs forecast')).toBeInTheDocument()
+})
+
+test('gives a long wait before the cut-off in hours and minutes', () => {
+  render(<DayAheadView day={jan15Early} />)
+  expect(screen.getByText(/published 13 Jan at 22:30, 2 h 30 min before the 01:00 cut-off/)).toBeInTheDocument()
 })
 
 test('warns about hours with no forecast', () => {
-  // Review Focus 2
   render(<DayAheadView day={jan15Early} />)
   expect(screen.getByText(/for 2 hours; they are left blank/)).toBeInTheDocument()
 })

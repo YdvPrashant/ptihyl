@@ -15,6 +15,7 @@ jobs:
       - uses: astral-sh/setup-uv@v10.3.2 # this action publishes exact tags only, no floating major tag
       - run: uv sync --frozen
       - run: uv run ruff check .
+      - run: uv run ruff format --check .
       - run: uv run pytest -q
 
   frontend:

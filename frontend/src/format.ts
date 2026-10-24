@@ -42,6 +42,14 @@ export function formatSignedGW(mw: number): string {
   return `${sign(mw)}${(Math.abs(mw) / 1000).toFixed(1)} GW`
 }
 
+/** 20 -> "20 min", 150 -> "2 h 30 min" */
+export function formatMinutes(total: number): string {
+  const hours = Math.floor(total / 60)
+  const minutes = total % 60
+  if (hours === 0) return `${minutes} min`
+  return minutes === 0 ? `${hours} h` : `${hours} h ${minutes} min`
+}
+
 /** 0.8427 -> "84%" */
 export function formatPct(share: number): string {
   return `${Math.round(share * 100)}%`

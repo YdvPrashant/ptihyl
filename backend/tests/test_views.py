@@ -38,13 +38,13 @@ def test_day_view_jan15(snap, index):
     assert (d.band.p10, d.band.p90, d.band.bias, d.band.days_of_history) == (-1016, 5730, 1855, 7)
 
 
-def test_day_view_early_cutoff_leaves_gaps(snap, index):  # Review Focus 2
+def test_day_view_early_cutoff_leaves_gaps(snap, index):  # the newest run before 01:00 stops at 21:00 on day D
     d = day_view(snap, index, date(2026, 1, 15), time(1, 0))
     assert [h.time for h in d.hours if h.forecast is None] == ["2026-01-15T22:00:00Z", "2026-01-15T23:00:00Z"]
     assert d.stats.hours_with_forecast == 22 and d.stats.mae is not None
 
 
-def test_likely_range_never_goes_below_zero(snap, index):  # final review I2: wind output cannot be negative
+def test_likely_range_never_goes_below_zero(snap, index):  # wind output cannot be negative
     d = day_view(snap, index, date(2026, 1, 18), time(9, 50))
     assert min(h.low for h in d.hours if h.low is not None) == 0
     assert all(h.adjusted >= 0 for h in d.hours if h.adjusted is not None)

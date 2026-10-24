@@ -174,8 +174,18 @@ def day_view(snap: Snapshot, index: ForecastIndex, day: date, at: time) -> DayRe
         picked = pick_day_ahead(index, slot, at)
         actual = snap.actuals.get(slot)
         if picked is None:
-            hours.append(HourOut(time=iso(slot), forecast=None, actual=actual, low=None, high=None, adjusted=None,
-                                 lead_hours=None, published=None))
+            hours.append(
+                HourOut(
+                    time=iso(slot),
+                    forecast=None,
+                    actual=actual,
+                    low=None,
+                    high=None,
+                    adjusted=None,
+                    lead_hours=None,
+                    published=None,
+                )
+            )
             continue
         publish, forecast = picked
         runs.add(publish)

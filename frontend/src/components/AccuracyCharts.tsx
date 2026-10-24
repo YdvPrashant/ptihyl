@@ -80,13 +80,19 @@ export function ErrorHistogram({ data, p10, p90 }: { data: Accuracy['histogram']
   )
 }
 
-export function DailyChart({ data, onPickDay }: { data: Accuracy['daily']; onPickDay: (date: string) => void }) {
+type DailyProps = { data: Accuracy['daily']; selected: string; onPickDay: (date: string) => void }
+
+export function DailyChart({ data, selected, onPickDay }: DailyProps) {
   const dayTicks = niceTicks(Math.max(...data.map((d) => d.mae)), 1000)
   return (
-    <ChartFrame title="Typical miss on each delivery day" caption="Average size of the hourly error, per day. Click a day to open it.">
+    <ChartFrame
+      title="Typical miss on each delivery day"
+      caption="Average size of the hourly error, per day. The darkest bar is the day picked above; click any day to open it."
+    >
       <BarChart
         data={data}
-        margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
+        // The extra right margin keeps the last date label ("1 Feb") from being cut off on a phone.
+        margin={{ top: 8, right: 16, bottom: 0, left: 0 }}
         className="cursor-pointer"
         onClick={(state) => {
           const date = data[Number(state.activeTooltipIndex)]?.date
@@ -100,7 +106,11 @@ export function DailyChart({ data, onPickDay }: { data: Accuracy['daily']; onPic
           cursor={{ fill: theme.rule, opacity: 0.4 }}
           content={<BarTooltip describe={(r: Day) => `${formatUkDate(r.date)}: typical miss ${formatMW(r.mae)}, bias ${formatNumber(r.bias, true)} MW`} />}
         />
-        <Bar dataKey="mae" fill={theme.forecast} {...bar} />
+        <Bar dataKey="mae" {...bar}>
+          {data.map((d) => (
+            <Cell key={d.date} fill={d.date === selected ? theme.ink : theme.forecast} />
+          ))}
+        </Bar>
       </BarChart>
     </ChartFrame>
   )

@@ -3,6 +3,7 @@ import { expect, test } from 'vitest'
 import {
   formatCompactMW,
   formatGW,
+  formatMinutes,
   formatMW,
   formatNumber,
   formatPct,
@@ -15,7 +16,6 @@ import {
 } from './format'
 
 test('times stay in UK time when the browser is in India', () => {
-  // Review Focus 1
   expect(new Date('2026-01-15T09:30:00Z').getHours()).toBe(15) // proves TZ=Asia/Kolkata is active
   expect(formatUkTime('2026-01-15T09:30:00Z')).toBe('09:30')
   expect(formatUkDateTime('2026-01-14T09:30:00Z')).toBe('14 Jan, 09:30')
@@ -48,6 +48,15 @@ test('chart axis labels', () => {
     '2.5K',
   ])
   expect(formatUkDate('2026-01-02')).toBe('2 Jan')
+})
+
+test('waits read in hours and minutes', () => {
+  expect([formatMinutes(20), formatMinutes(150), formatMinutes(120), formatMinutes(0)]).toEqual([
+    '20 min',
+    '2 h 30 min',
+    '2 h',
+    '0 min',
+  ])
 })
 
 test('long delivery-day names stay on the UK date', () => {

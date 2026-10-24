@@ -12,7 +12,6 @@ function deferred<T>() {
 }
 
 test('a slow older response never overwrites a newer one', async () => {
-  // Review Focus 4
   const slow = deferred<string>()
   const fast = deferred<string>()
   const { result, rerender } = renderHook(({ k }) => useApi(() => (k === 1 ? slow.promise : fast.promise), [k]), {

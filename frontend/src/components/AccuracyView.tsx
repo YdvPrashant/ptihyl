@@ -3,10 +3,16 @@ import type { ReactNode } from 'react'
 import type { Accuracy } from '../api'
 import { formatGW, formatMW, formatNumber, formatPct, formatSignedGW, formatSignedMW, formatUkDate } from '../format'
 import { DailyChart, ErrorHistogram, LeadTimeChart } from './AccuracyCharts'
-import { KpiTile } from './KpiTile'
+import { KpiRow, KpiTile } from './KpiTile'
 import { MethodNote } from './MethodNote'
 
-export function AccuracyView({ data, onPickDay }: { data: Accuracy; onPickDay: (date: string) => void }) {
+// The first column names the row; numbers sit right-aligned, so their digits line up.
+const tableCell = 'py-1 pr-3 text-right first:text-left last:pr-0'
+
+type Props = { data: Accuracy; selected: string; onPickDay: (date: string) => void }
+
+/** `selected` is the delivery day picked above; it is marked in the daily chart and table. */
+export function AccuracyView({ data, selected, onPickDay }: Props) {
   const s = data.summary
   const windowHours = ((Date.parse(data.window_last) - Date.parse(data.window_first)) / 864e5 + 1) * 24
 
@@ -19,7 +25,7 @@ export function AccuracyView({ data, onPickDay }: { data: Accuracy; onPickDay: (
           ` Based on ${formatNumber(s.hours)} of ${formatNumber(windowHours)} hours; the rest had no forecast published before the cut-off.`}
       </p>
 
-      <div className="flex flex-wrap gap-y-6">
+      <KpiRow>
         <KpiTile label="Typical miss" value={formatGW(s.mae)} note={`${formatPct(s.mae_pct)} of average output`} />
         <KpiTile
           label={s.bias >= 0 ? 'Leans high' : 'Leans low'}
@@ -33,7 +39,7 @@ export function AccuracyView({ data, onPickDay }: { data: Accuracy; onPickDay: (
           note="range of the error in the middle 80% of hours"
         />
         <KpiTile label="Worst miss" value={formatGW(s.worst)} note="largest single-hour error" />
-      </div>
+      </KpiRow>
 
       <div className="flex max-w-3xl flex-col gap-1 border-l-2 border-forecast pl-4">
         <p>
@@ -49,7 +55,7 @@ export function AccuracyView({ data, onPickDay }: { data: Accuracy; onPickDay: (
         <LeadTimeChart data={data.by_lead_time} />
         <ErrorHistogram data={data.histogram} p10={s.p10} p90={s.p90} />
       </div>
-      <DailyChart data={data.daily} onPickDay={onPickDay} />
+      <DailyChart data={data.daily} selected={selected} onPickDay={onPickDay} />
 
       <details className="text-sm">
         <summary className="cursor-pointer text-muted">Show the numbers behind the charts</summary>
@@ -76,8 +82,11 @@ export function AccuracyView({ data, onPickDay }: { data: Accuracy; onPickDay: (
                 <button
                   key="day"
                   aria-label={`Open ${formatUkDate(d.date)}`}
+                  aria-current={d.date === selected ? 'date' : undefined}
                   onClick={() => onPickDay(d.date)}
-                  className="underline decoration-rule underline-offset-2 hover:decoration-ink focus-visible:outline-2 focus-visible:outline-forecast"
+                  className={`underline decoration-rule underline-offset-2 hover:decoration-ink focus-visible:outline-2 focus-visible:outline-forecast ${
+                    d.date === selected ? 'font-semibold' : ''
+                  }`}
                 >
                   {formatUkDate(d.date)}
                 </button>,
@@ -96,12 +105,12 @@ export function AccuracyView({ data, onPickDay }: { data: Accuracy; onPickDay: (
 
 function SmallTable({ caption, head, rows }: { caption: string; head: string[]; rows: { key: string; cells: ReactNode[] }[] }) {
   return (
-    <table className="w-full text-left">
+    <table className="w-full">
       <caption className="mb-1 text-left font-semibold">{caption}</caption>
       <thead className="text-muted">
         <tr>
           {head.map((h) => (
-            <th key={h} className="py-1 font-medium">
+            <th key={h} className={`${tableCell} font-medium`}>
               {h}
             </th>
           ))}
@@ -111,7 +120,7 @@ function SmallTable({ caption, head, rows }: { caption: string; head: string[]; 
         {rows.map((r) => (
           <tr key={r.key} className="border-t border-rule">
             {r.cells.map((cell, i) => (
-              <td key={i} className="py-1">
+              <td key={i} className={tableCell}>
                 {cell}
               </td>
             ))}

@@ -39,6 +39,7 @@ export function parseUrlState(search: string, meta: Meta): UrlState {
   }
 }
 
+/** "?date=2026-01-20&cutoff=15:30&tab=accuracy": the colon is legal in a query, so links stay readable. */
 export function toSearch(state: UrlState): string {
-  return `?${new URLSearchParams(state)}`
+  return `?${new URLSearchParams(state)}`.replaceAll('%3A', ':')
 }

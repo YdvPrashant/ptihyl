@@ -1,10 +1,21 @@
 import { useState } from 'react'
 
 import type { DayView } from '../api'
-import { formatMW, formatNumber, formatSignedMW, formatUkDate, formatUkLongDate, formatUkTime } from '../format'
+import {
+  formatMinutes,
+  formatMW,
+  formatNumber,
+  formatSignedMW,
+  formatUkDate,
+  formatUkLongDate,
+  formatUkTime,
+} from '../format'
 import { theme } from '../theme'
 import { DayChart } from './DayChart'
-import { KpiTile } from './KpiTile'
+import { KpiRow, KpiTile } from './KpiTile'
+
+// The first column names the hour; numbers sit right-aligned, so their digits line up.
+const tableCell = 'py-1 pr-3 text-right first:text-left last:pr-0'
 
 export function DayAheadView({ day }: { day: DayView }) {
   const [showAdjusted, setShowAdjusted] = useState(false)
@@ -17,11 +28,11 @@ export function DayAheadView({ day }: { day: DayView }) {
     <div className="flex flex-col gap-6">
       <p className="text-lg">
         {latestRun
-          ? `Forecast for ${delivery}, published ${formatUkDate(latestRun)} at ${formatUkTime(latestRun)}, ${minutesBetween(latestRun, day.cutoff)} min before the ${cutoff} cut-off.`
+          ? `Forecast for ${delivery}, published ${formatUkDate(latestRun)} at ${formatUkTime(latestRun)}, ${formatMinutes(minutesBetween(latestRun, day.cutoff))} before the ${cutoff} cut-off.`
           : `No forecast for ${delivery} was published before the ${cutoff} cut-off.`}
       </p>
 
-      <div className="flex flex-wrap gap-y-6">
+      <KpiRow>
         <KpiTile
           label="Typical miss"
           value={day.stats.mae === null ? 'n/a' : formatMW(day.stats.mae)}
@@ -43,7 +54,7 @@ export function DayAheadView({ day }: { day: DayView }) {
           value={day.band ? `${formatSignedMW(-day.band.p90)} to ${formatSignedMW(-day.band.p10)}` : 'n/a'}
           note="how far the actual usually lands from the forecast, based on the last 7 days of errors"
         />
-      </div>
+      </KpiRow>
 
       {missing > 0 && (
         <p role="status" className="border-l-2 border-actual pl-3">
@@ -73,26 +84,26 @@ export function DayAheadView({ day }: { day: DayView }) {
 
       <details className="text-sm">
         <summary className="cursor-pointer text-muted">Show the hourly numbers</summary>
-        <table className="mt-3 w-full text-left tabular-nums">
+        <table className="mt-3 w-full tabular-nums">
           <thead className="text-muted">
             <tr>
-              <th className="py-1 font-medium">Hour</th>
-              <th className="py-1 font-medium">Forecast (MW)</th>
-              <th className="py-1 font-medium">Likely range (MW)</th>
-              <th className="py-1 font-medium">Actual (MW)</th>
-              <th className="py-1 font-medium">Error (MW)</th>
+              {['Hour', 'Forecast (MW)', 'Likely range (MW)', 'Actual (MW)', 'Error (MW)'].map((h) => (
+                <th key={h} className={`${tableCell} font-medium`}>
+                  {h}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {day.hours.map((h) => (
               <tr key={h.time} className="border-t border-rule">
-                <td className="py-1">{formatUkTime(h.time)}</td>
-                <td className="py-1">{h.forecast === null ? '–' : formatNumber(h.forecast)}</td>
-                <td className="py-1">
+                <td className={tableCell}>{formatUkTime(h.time)}</td>
+                <td className={tableCell}>{h.forecast === null ? '–' : formatNumber(h.forecast)}</td>
+                <td className={tableCell}>
                   {h.low === null || h.high === null ? '–' : `${formatNumber(h.low)} to ${formatNumber(h.high)}`}
                 </td>
-                <td className="py-1">{h.actual === null ? '–' : formatNumber(h.actual)}</td>
-                <td className="py-1">
+                <td className={tableCell}>{h.actual === null ? '–' : formatNumber(h.actual)}</td>
+                <td className={tableCell}>
                   {h.forecast === null || h.actual === null ? '–' : formatNumber(h.forecast - h.actual, true)}
                 </td>
               </tr>

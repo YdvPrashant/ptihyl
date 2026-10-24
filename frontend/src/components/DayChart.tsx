@@ -23,6 +23,7 @@ export function DayChart({ hours, showAdjusted }: { hours: Hour[]; showAdjusted:
   }))
   const peak = Math.max(...hours.flatMap((h) => [h.forecast, h.high, h.actual, h.adjusted].filter((v) => v !== null)))
   const ticks = niceTicks(peak, 5000)
+  const everyThreeHours = rows.filter((_, i) => i % 3 === 0).map((r) => r.hour)
   const line = { type: 'monotone', strokeWidth: 2, dot: false, connectNulls: false, isAnimationActive: false } as const
   const activeDot = { r: 4, strokeWidth: 2, stroke: theme.paper }
 
@@ -32,7 +33,16 @@ export function DayChart({ hours, showAdjusted }: { hours: Hour[]; showAdjusted:
       <ResponsiveContainer width="100%" height={340} initialDimension={{ width: 800, height: 340 }}>
         <ComposedChart data={rows} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
           <CartesianGrid vertical={false} stroke={theme.rule} />
-          <XAxis dataKey="hour" interval={2} tick={{ fill: theme.muted, fontSize: 12 }} tickLine={false} stroke={theme.rule} />
+          {/* A label every 3 hours, or every 6 when they would crowd each other (on a phone). */}
+          <XAxis
+            dataKey="hour"
+            ticks={everyThreeHours}
+            interval="equidistantPreserveStart"
+            minTickGap={12}
+            tick={{ fill: theme.muted, fontSize: 12 }}
+            tickLine={false}
+            stroke={theme.rule}
+          />
           <YAxis
             domain={[0, ticks.at(-1) ?? 0]}
             ticks={ticks}

@@ -17,11 +17,28 @@ const input =
   'rounded-md border border-rule bg-white px-3 py-2 text-base text-ink tabular-nums focus-visible:outline-2 focus-visible:outline-forecast'
 const step = `${input} hover:border-ink disabled:opacity-40 disabled:hover:border-rule`
 
+/**
+ * What a native date or time box shows. While someone types, it passes through values the app won't take (typing
+ * 01/02/2026 goes via 1 Jan, outside the window); showing `value` then would snap the box back mid-typing. So the
+ * box keeps the typed text until `value` changes, or until `reset` puts `value` back.
+ */
+function useTyped(value: string) {
+  const [typed, setTyped] = useState({ value, text: value })
+  const text = typed.value === value ? typed.text : value
+  return {
+    text,
+    type: (next: string) => setTyped({ value, text: next }),
+    reset: () => setTyped({ value, text: value }),
+  }
+}
+
 export function Controls({ meta, date, cutoff, onDateChange, onCutoffChange }: Props) {
   const isPreset = meta.presets.some((p) => p.time === cutoff)
   const [customChosen, setCustomChosen] = useState(!isPreset)
   const selected = customChosen || !isPreset ? CUSTOM : cutoff
   const dayId = useId()
+  const day = useTyped(date)
+  const customTime = useTyped(cutoff)
 
   return (
     <div className="flex flex-wrap items-end gap-4">
@@ -43,8 +60,12 @@ export function Controls({ meta, date, cutoff, onDateChange, onCutoffChange }: P
             className={input}
             min={meta.delivery_first}
             max={meta.delivery_last}
-            value={date}
-            onChange={(e) => e.target.value && onDateChange(e.target.value)}
+            value={day.text}
+            onChange={(e) => {
+              day.type(e.target.value)
+              if (e.target.value) onDateChange(e.target.value)
+            }}
+            onBlur={day.reset}
           />
           <button
             type="button"
@@ -82,8 +103,12 @@ export function Controls({ meta, date, cutoff, onDateChange, onCutoffChange }: P
           <input
             type="time"
             className={input}
-            value={cutoff}
-            onChange={(e) => e.target.value && onCutoffChange(e.target.value)}
+            value={customTime.text}
+            onChange={(e) => {
+              customTime.type(e.target.value)
+              if (e.target.value) onCutoffChange(e.target.value)
+            }}
+            onBlur={customTime.reset}
           />
         </label>
       )}
